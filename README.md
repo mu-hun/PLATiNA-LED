@@ -1,5 +1,7 @@
 # PLATiNA‑LED
 
+https://github.com/user-attachments/assets/e6d7e4c1-7250-472a-98e9-356393bfd2fc
+
 리듬게임 [PLATiNA :: LAB](https://platinalab.net/)의 4키 레인 입력을
 [`NS‑LED‑02`](./NS-LED.pdf)으로 실시간 시각화하는 프로젝트의 개념
 증명(PoC)입니다.
