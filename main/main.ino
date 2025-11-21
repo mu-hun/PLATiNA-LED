@@ -10,6 +10,40 @@ NS_Rainbow ns_stick = NS_Rainbow(N_CELL, PIN);
 const uint8_t laneStart[4] = {0, 2, 4, 6};
 const uint8_t ledsPerLane = 2;
 
+// === BPM / OFFSET 상태 ===
+float bpm = 180.0f;
+float beatMs = 60000.0f / bpm;
+
+unsigned long flashDurationMs = 150;
+unsigned long dualRainbowDurationMs = 800;
+float breathingPeriodBaseMs = 600.0f;
+
+int ledOffsetMs = 0;
+
+void setBpm(float newBpm)
+{
+  if (newBpm <= 0)
+    return;
+  bpm = newBpm;
+  beatMs = 60000.0f / bpm;
+
+  flashDurationMs = (unsigned long)(beatMs / 3.0f);
+  dualRainbowDurationMs = (unsigned long)(beatMs * 2.0f);
+  breathingPeriodBaseMs = beatMs * 2.0f;
+
+  Serial.print(F("[BPM] set to "));
+  Serial.print(bpm);
+  Serial.print(F(", beatMs="));
+  Serial.println(beatMs);
+}
+
+void setOffset(int ms)
+{
+  if (ms < 0)
+    ms = 0;
+  ledOffsetMs = ms;
+}
+
 // === 입력 상태 ===
 char lastKey = 0;
 unsigned long lastKeyTime = 0;
@@ -113,7 +147,7 @@ void triggerDualRainbow()
 void renderDualRainbow(unsigned long now)
 {
   unsigned long elapsed = now - dualRainbowStart;
-  if (elapsed >= dualRainbowDuration)
+  if (elapsed >= dualRainbowDurationMs)
   {
     dualRainbowActive = false;
     return;
@@ -137,7 +171,7 @@ void renderDualRainbow(unsigned long now)
 // === 렌더링: Hit flash ===
 void renderLaneHitFlash(uint8_t lane, unsigned long now)
 {
-  const unsigned long duration = 150;
+  unsigned long duration = flashDurationMs;
   unsigned long elapsed = now - lanes[lane].startTime;
 
   float t = (elapsed >= duration) ? 1.0f : (float)elapsed / duration;
@@ -165,11 +199,18 @@ void renderLaneBreathing(uint8_t lane, unsigned long now)
 {
   unsigned long elapsed = now - lanes[lane].startTime;
 
-  float baseSpeed = 0.004f;
-  float speed = baseSpeed + 0.001f * lanes[lane].repeatCount;
+  int rc = lanes[lane].repeatCount;
+  if (rc < 1)
+    rc = 1;
+  float factor = 1.0f / rc;
 
-  float phase = sin(elapsed * speed * 2.0f * PI); // -1 ~ +1
-  float brightness = 0.3f + 0.7f * ((phase + 1.0f) * 0.5f);
+  float periodMs = breathingPeriodBaseMs * factor;
+  if (periodMs < beatMs * 0.5f)
+    periodMs = beatMs * 0.5f;
+
+  float phase = 2.0f * PI * ((float)elapsed / periodMs);
+
+  float brightness = 0.3f + 0.7f * ((sin(phase) + 1.0f) * 0.5f);
 
   float hue = fmod(lanes[lane].baseHue + elapsed * 0.03f, 360.0f);
 
@@ -264,7 +305,7 @@ void onKeyEvent(char key)
   lastKey = key;
   lastKeyTime = now;
 
-  lanes[lane].startTime = now;
+  lanes[lane].startTime = now + ledOffsetMs;
   lanes[lane].repeatCount = repeatCount;
 
   if (repeatCount >= 2)
@@ -277,13 +318,55 @@ void onKeyEvent(char key)
   }
 }
 
-// === 시리얼 입력 처리 ===
+void processLine(char *line)
+{
+  if (strlen(line) == 1)
+  {
+    char k = line[0];
+    if (k == 'D' || k == 'F' || k == 'K' || k == 'L' || k == 'E')
+    {
+      onKeyEvent(k);
+      return;
+    }
+  }
+
+  if (strncmp(line, "BPM ", 4) == 0)
+  {
+    int val = atoi(line + 4);
+    if (val > 0)
+      setBpm((float)val);
+    return;
+  }
+
+  if (strncmp(line, "OFFSET ", 7) == 0)
+  {
+    int val = atoi(line + 7);
+    setOffset(val);
+    return;
+  }
+}
+
 void handleSerialInput()
 {
+  static char buf[32];
+  static uint8_t pos = 0;
+
   while (Serial.available() > 0)
   {
     char c = Serial.read();
-    onKeyEvent(c);
+    if (c == '\r' || c == '\n')
+    {
+      if (pos > 0)
+      {
+        buf[pos] = '\0';
+        processLine(buf);
+        pos = 0;
+      }
+    }
+    else if (pos < sizeof(buf) - 1)
+    {
+      buf[pos++] = c;
+    }
   }
 }
 
