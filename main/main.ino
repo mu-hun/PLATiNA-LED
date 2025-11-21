@@ -20,6 +20,16 @@ float breathingPeriodBaseMs = 600.0f;
 
 int ledOffsetMs = 0;
 
+// === FPS 설정 ===
+const int targetFPS = 60; // 인게임 FPS에 맞춰 조정
+
+unsigned long calculateFrameDelay(int targetFPS)
+{
+  return 1000 / targetFPS;
+}
+
+unsigned long frameDelayMs = calculateFrameDelay(targetFPS);
+
 void setBpm(float newBpm)
 {
   if (newBpm <= 0)
@@ -382,5 +392,5 @@ void loop()
 {
   handleSerialInput();
   updateEffects();
-  delay(10); // CPU 사용량 완화용, 100FPS 정도
+  delay(frameDelayMs);
 }
