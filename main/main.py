@@ -94,7 +94,7 @@ def main():
     ser = setup_serial(args.port, args.baud)
     apply_initial_config(ser, args.bpm, args.offset)
 
-    print("[INFO] Starting key hook.")
+    print("[INFO] Starting key hook and serial reader.")
 
     def on_press(key: keyboard.KeyCode | keyboard.Key | None):
         if isinstance(key, keyboard.KeyCode) and key.char:
@@ -119,10 +119,24 @@ def main():
             print("[INFO] Exit key pressed. Stopping client...")
             listener.stop()
 
-    with keyboard.Listener(on_press=on_press) as listener:
-        listener.join()
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
 
-    ser.close()
+    try:
+        while listener.is_alive():
+            try:
+                if ser.in_waiting > 0:
+                    line = ser.readline().decode("utf-8").strip()
+                    if line:
+                        print(f"[SERIAL] {line}")
+            except serial.SerialException as e:
+                print(f"[ERROR] Serial read failed: {e}", file=sys.stderr)
+                break
+
+            time.sleep(0.01)
+    finally:
+        listener.stop()
+        ser.close()
 
 
 if __name__ == "__main__":
