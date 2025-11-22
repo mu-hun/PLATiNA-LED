@@ -16,6 +16,8 @@ KEY_MAP = {
     "'": "L",
 }
 
+KEY_LOGGING = False
+
 
 def send_line(ser, line: str):
     """
@@ -102,12 +104,14 @@ def main():
 
         if name in KEY_MAP:
             code = KEY_MAP[name]
-            print(f"[KEY] {name} -> '{code}'")
+            if KEY_LOGGING:
+                print(f"[KEY] {name} -> '{code}'")
             send_line(ser, code)
             return
 
         if key == keyboard.Key.enter:
-            print("[KEY] Enter -> 'E'")
+            if KEY_LOGGING:
+                print("[KEY] Enter -> 'E'")
             send_line(ser, "E")
             return
 
