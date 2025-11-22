@@ -54,11 +54,6 @@ void setOffset(int ms)
   ledOffsetMs = ms;
 }
 
-// === 입력 상태 ===
-char lastKey = 0;
-unsigned long lastKeyTime = 0;
-int repeatCount = 0;
-
 // === 레인 상태 ===
 enum LaneEffectType
 {
@@ -71,6 +66,7 @@ struct LaneState
 {
   LaneEffectType effect;
   unsigned long startTime;
+  unsigned long lastPressTime;
   uint8_t baseHue;
   uint8_t repeatCount;
 };
@@ -291,7 +287,8 @@ int keyToLane(char key)
 void onKeyPress(char key)
 {
   unsigned long now = millis();
-  const unsigned long repeatThreshold = 200;
+  const float repeatWindowBeats = 1.0f; // "연타"로 볼 최대 간격
+  const unsigned long repeatWindowMs = (unsigned long)(beatMs * repeatWindowBeats);
 
   if (key == 'E')
   {
@@ -303,27 +300,32 @@ void onKeyPress(char key)
   if (lane < 0)
     return;
 
-  if (key == lastKey && (now - lastKeyTime) < repeatThreshold)
+  LaneState &st = lanes[lane];
+
+  // 이전 프레스와의 간격으로 연타 판단
+  if (now - st.lastPressTime < repeatWindowMs)
   {
-    repeatCount++;
+    st.repeatCount++;
   }
   else
   {
-    repeatCount = 1;
+    st.repeatCount = 1;
   }
-  lastKey = key;
-  lastKeyTime = now;
+  st.lastPressTime = now;
 
-  lanes[lane].startTime = now + ledOffsetMs;
-  lanes[lane].repeatCount = repeatCount;
+  st.startTime = now + ledOffsetMs;
 
-  if (repeatCount >= 2)
+  if (st.repeatCount >= 2)
   {
-    lanes[lane].effect = EFFECT_BREATHING;
+    Serial.print("[BREATH] lane=");
+    Serial.print(lane);
+    Serial.print(" rc=");
+    Serial.println(st.repeatCount);
+    st.effect = EFFECT_BREATHING;
   }
   else
   {
-    lanes[lane].effect = EFFECT_HIT_FLASH;
+    st.effect = EFFECT_HIT_FLASH;
   }
 }
 
