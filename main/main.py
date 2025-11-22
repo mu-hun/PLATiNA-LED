@@ -106,20 +106,34 @@ def main():
             code = KEY_MAP[name]
             if KEY_LOGGING:
                 print(f"[KEY] {name} -> '{code}'")
-            send_line(ser, code)
+            send_line(ser, f"DOWN {code}")
             return
 
         if key == keyboard.Key.enter:
             if KEY_LOGGING:
                 print("[KEY] Enter -> 'E'")
-            send_line(ser, "E")
+            send_line(ser, "DOWN E")
             return
 
         if key == keyboard.Key.esc:
             print("[INFO] Exit key pressed. Stopping client...")
             listener.stop()
 
-    listener = keyboard.Listener(on_press=on_press)
+    def on_release(key: keyboard.KeyCode | keyboard.Key | None):
+        if isinstance(key, keyboard.KeyCode) and key.char:
+            name = key.char.lower()
+        else:
+            name = None
+
+        if name in KEY_MAP:
+            code = KEY_MAP[name]
+            send_line(ser, f"UP {code}")
+            return
+
+        if key == keyboard.Key.enter:
+            send_line(ser, "UP E")
+
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
     listener.start()
 
     try:

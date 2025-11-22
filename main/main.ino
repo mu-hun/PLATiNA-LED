@@ -287,8 +287,8 @@ int keyToLane(char key)
   }
 }
 
-// === 키 이벤트 처리 ===
-void onKeyEvent(char key)
+// === 키 프레스 이벤트 처리 ===
+void onKeyPress(char key)
 {
   unsigned long now = millis();
   const unsigned long repeatThreshold = 200;
@@ -301,7 +301,7 @@ void onKeyEvent(char key)
 
   int lane = keyToLane(key);
   if (lane < 0)
-    return; // D/F/K/L 외 무시
+    return;
 
   if (key == lastKey && (now - lastKeyTime) < repeatThreshold)
   {
@@ -327,14 +327,50 @@ void onKeyEvent(char key)
   }
 }
 
+// === 키 릴리즈 이벤트 처리 ===
+void onKeyRelease(char key)
+{
+  if (key == 'E')
+  {
+    dualRainbowActive = false;
+    for (uint8_t i = 0; i < N_CELL; i++)
+    {
+      ns_stick.setColor(i, ns_stick.RGBtoColor(0, 0, 0));
+    }
+    ns_stick.show();
+    return;
+  }
+
+  int lane = keyToLane(key);
+  if (lane < 0)
+    return;
+
+  lanes[lane].effect = EFFECT_NONE;
+  for (uint8_t i = 0; i < ledsPerLane; i++)
+  {
+    uint8_t ledIndex = laneStart[lane] + i;
+    ns_stick.setColor(ledIndex, ns_stick.RGBtoColor(0, 0, 0));
+  }
+}
+
 void processLine(char *line)
 {
-  if (strlen(line) == 1)
+  if (strncmp(line, "DOWN ", 5) == 0)
   {
-    char k = line[0];
+    char k = line[5];
     if (k == 'D' || k == 'F' || k == 'K' || k == 'L' || k == 'E')
     {
-      onKeyEvent(k);
+      onKeyPress(k);
+      return;
+    }
+  }
+
+  if (strncmp(line, "UP ", 3) == 0)
+  {
+    char k = line[3];
+    if (k == 'D' || k == 'F' || k == 'K' || k == 'L' || k == 'E')
+    {
+      onKeyRelease(k);
       return;
     }
   }
