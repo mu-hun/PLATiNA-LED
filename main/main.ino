@@ -69,6 +69,7 @@ struct LaneState
   unsigned long lastPressTime;
   uint8_t baseHue;
   uint8_t repeatCount;
+  float huePhase;
 };
 
 LaneState lanes[4];
@@ -138,6 +139,7 @@ void initLanes()
     lanes[i].startTime = 0;
     lanes[i].baseHue = 60 * i; // 레인별 Hue 다르게
     lanes[i].repeatCount = 0;
+    lanes[i].huePhase = 0.0f;
   }
 }
 
@@ -217,7 +219,7 @@ void renderLaneBreathing(uint8_t lane, unsigned long now)
 
   float brightness = 0.3f + 0.7f * ((sin(phase) + 1.0f) * 0.5f);
 
-  float hue = fmod(lanes[lane].baseHue + elapsed * 0.03f, 360.0f);
+  float hue = fmod(lanes[lane].baseHue + lanes[lane].huePhase, 360.0f);
 
   uint8_t r, g, b;
   hsvToRgb(hue, 1.0f, brightness, r, g, b);
@@ -249,6 +251,8 @@ void updateEffects()
       renderLaneHitFlash(lane, now);
       break;
     case EFFECT_BREATHING:
+      float speed = 0.8f + (lanes[lane].repeatCount - 1) * 0.6f;
+      lanes[lane].huePhase = fmod(lanes[lane].huePhase + speed, 360.0f);
       renderLaneBreathing(lane, now);
       break;
     case EFFECT_NONE:
@@ -317,10 +321,9 @@ void onKeyPress(char key)
 
   if (st.repeatCount >= 2)
   {
-    Serial.print("[BREATH] lane=");
-    Serial.print(lane);
-    Serial.print(" rc=");
-    Serial.println(st.repeatCount);
+    if (st.effect != EFFECT_BREATHING)
+      st.huePhase = 0.0f; // 처음 및 재연타 시 hue 단계 초기화
+
     st.effect = EFFECT_BREATHING;
   }
   else
