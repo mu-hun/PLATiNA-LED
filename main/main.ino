@@ -80,7 +80,6 @@ LaneState lanes[4];
 // === Dual rainbow 상태 ===
 bool dualRainbowActive = false;
 unsigned long dualRainbowStart = 0;
-const unsigned long dualRainbowDuration = 800; // ms
 float dualBaseHue = 0.0f;
 
 // === HSV → RGB ===
