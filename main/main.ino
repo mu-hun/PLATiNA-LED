@@ -14,9 +14,9 @@ const uint8_t ledsPerLane = 2;
 float bpm = 180.0f;
 float beatMs = 60000.0f / bpm;
 
-unsigned long flashDurationMs = 150;
-unsigned long dualRainbowDurationMs = 800;
-float breathingPeriodBaseMs = 600.0f;
+unsigned long flashDurationMs = beatMs / 3.0f;
+unsigned long dualRainbowDurationMs = beatMs * 2.0f;
+float breathingPeriodBaseMs = beatMs * 2.0f;
 
 int ledOffsetMs = 0;
 
@@ -37,8 +37,8 @@ void setBpm(float newBpm)
   bpm = newBpm;
   beatMs = 60000.0f / bpm;
 
-  flashDurationMs = (unsigned long)(beatMs / 3.0f);
-  dualRainbowDurationMs = (unsigned long)(beatMs * 2.0f);
+  flashDurationMs = beatMs / 3.0f;
+  dualRainbowDurationMs = beatMs * 2.0f;
   breathingPeriodBaseMs = beatMs * 2.0f;
 
   Serial.print(F("[BPM] set to "));
