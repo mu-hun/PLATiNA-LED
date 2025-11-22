@@ -59,6 +59,7 @@ enum LaneEffectType
 {
   EFFECT_NONE,
   EFFECT_HIT_FLASH,
+  EFFECT_HOLD,
   EFFECT_BREATHING
 };
 
@@ -70,12 +71,14 @@ struct LaneState
   uint8_t baseHue;
   uint8_t repeatCount;
   float huePhase;
+  bool isDown;
 };
 
 LaneState lanes[4];
 
 // === Dual rainbow 상태 ===
 bool dualRainbowActive = false;
+bool enterDown = false;
 unsigned long dualRainbowStart = 0;
 float dualBaseHue = 0.0f;
 
@@ -140,6 +143,7 @@ void initLanes()
     lanes[i].baseHue = 60 * i; // 레인별 Hue 다르게
     lanes[i].repeatCount = 0;
     lanes[i].huePhase = 0.0f;
+    lanes[i].isDown = false;
   }
 }
 
@@ -148,6 +152,7 @@ void triggerDualRainbow()
 {
   dualRainbowActive = true;
   dualRainbowStart = millis();
+  dualBaseHue = 0.0f;
 }
 
 // === 렌더링: Dual rainbow ===
@@ -186,8 +191,17 @@ void renderLaneHitFlash(uint8_t lane, unsigned long now)
 
   if (elapsed >= duration)
   {
-    lanes[lane].effect = EFFECT_NONE;
-    brightness = 0.0f;
+    if (lanes[lane].isDown)
+    {
+      // 키가 아직 눌려 있는 경우, HOLD 상태로 전환하여 지속적으로 켜진 상태 유지
+      lanes[lane].effect = EFFECT_HOLD;
+      brightness = 1.0f;
+    }
+    else
+    {
+      lanes[lane].effect = EFFECT_NONE;
+      brightness = 0.0f;
+    }
   }
 
   float hue = lanes[lane].baseHue;
@@ -250,6 +264,7 @@ void updateEffects()
     case EFFECT_HIT_FLASH:
       renderLaneHitFlash(lane, now);
       break;
+    case EFFECT_HOLD:
     case EFFECT_BREATHING:
       float speed = 0.8f + (lanes[lane].repeatCount - 1) * 0.6f;
       lanes[lane].huePhase = fmod(lanes[lane].huePhase + speed, 360.0f);
@@ -296,6 +311,11 @@ void onKeyPress(char key)
 
   if (key == 'E')
   {
+    // 중복 처리 방지: Enter 홀드 시 계속 들어오는 DOWN 이벤트를 무시
+    if (enterDown)
+      return;
+
+    enterDown = true;
     triggerDualRainbow();
     return;
   }
@@ -305,6 +325,12 @@ void onKeyPress(char key)
     return;
 
   LaneState &st = lanes[lane];
+
+  // 중복 처리 방지: 이미 눌려 있는 상태에서 들어온 DOWN 이벤트는 무시하기
+  if (st.isDown)
+    return;
+
+  st.isDown = true;
 
   // 이전 프레스와의 간격으로 연타 판단
   if (now - st.lastPressTime < repeatWindowMs)
@@ -337,6 +363,7 @@ void onKeyRelease(char key)
 {
   if (key == 'E')
   {
+    enterDown = false;
     dualRainbowActive = false;
     for (uint8_t i = 0; i < N_CELL; i++)
     {
@@ -351,6 +378,7 @@ void onKeyRelease(char key)
     return;
 
   lanes[lane].effect = EFFECT_NONE;
+  lanes[lane].isDown = false;
   for (uint8_t i = 0; i < ledsPerLane; i++)
   {
     uint8_t ledIndex = laneStart[lane] + i;
