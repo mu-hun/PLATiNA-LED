@@ -59,7 +59,6 @@ enum LaneEffectType
 {
   EFFECT_NONE,
   EFFECT_HIT_FLASH,
-  EFFECT_HOLD,
   EFFECT_BREATHING
 };
 
@@ -193,8 +192,7 @@ void renderLaneHitFlash(uint8_t lane, unsigned long now)
   {
     if (lanes[lane].isDown)
     {
-      // 키가 아직 눌려 있는 경우, HOLD 상태로 전환하여 지속적으로 켜진 상태 유지
-      lanes[lane].effect = EFFECT_HOLD;
+      lanes[lane].effect = EFFECT_BREATHING;
       brightness = 1.0f;
     }
     else
@@ -264,7 +262,6 @@ void updateEffects()
     case EFFECT_HIT_FLASH:
       renderLaneHitFlash(lane, now);
       break;
-    case EFFECT_HOLD:
     case EFFECT_BREATHING:
       float speed = 0.8f + (lanes[lane].repeatCount - 1) * 0.6f;
       lanes[lane].huePhase = fmod(lanes[lane].huePhase + speed, 360.0f);
