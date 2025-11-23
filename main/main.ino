@@ -77,9 +77,6 @@ LaneState lanes[4];
 
 // === Dual rainbow 상태 ===
 bool dualRainbowActive = false;
-bool enterDown = false;
-unsigned long dualRainbowStart = 0;
-float dualBaseHue = 0.0f;
 
 // === HSV → RGB ===
 void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
@@ -150,28 +147,17 @@ void initLanes()
 void triggerDualRainbow()
 {
   dualRainbowActive = true;
-  dualRainbowStart = millis();
-  dualBaseHue = 0.0f;
 }
 
 // === 렌더링: Dual rainbow ===
-void renderDualRainbow(unsigned long now)
+void renderDualRainbow()
 {
-  unsigned long elapsed = now - dualRainbowStart;
-  if (elapsed >= dualRainbowDurationMs)
-  {
-    dualRainbowActive = false;
-    return;
-  }
-
-  dualBaseHue = fmod(dualBaseHue + 0.8f, 360.0f);
-
   for (uint8_t i = 0; i < N_CELL; i++)
   {
     float center = (N_CELL - 1) / 2.0f; // 3.5
     float dist = fabs(i - center);      // 0 ~ 3.5
 
-    float hue = fmod(dualBaseHue + dist * 35.0f, 360.0f);
+    float hue = fmod(dist * 35.0f, 360.0f);
 
     uint8_t r, g, b;
     hsvToRgb(hue, 1.0, 1.0, r, g, b);
@@ -246,14 +232,14 @@ void renderLaneBreathing(uint8_t lane, unsigned long now)
 // === 효과 업데이트 ===
 void updateEffects()
 {
-  unsigned long now = millis();
-
   if (dualRainbowActive)
   {
-    renderDualRainbow(now);
+    renderDualRainbow();
     ns_stick.show();
     return;
   }
+
+  unsigned long now = millis();
 
   for (uint8_t lane = 0; lane < 4; lane++)
   {
@@ -308,11 +294,6 @@ void onKeyPress(char key)
 
   if (key == 'E')
   {
-    // 중복 처리 방지: Enter 홀드 시 계속 들어오는 DOWN 이벤트를 무시
-    if (enterDown)
-      return;
-
-    enterDown = true;
     triggerDualRainbow();
     return;
   }
@@ -353,7 +334,6 @@ void onKeyRelease(char key)
 {
   if (key == 'E')
   {
-    enterDown = false;
     dualRainbowActive = false;
     for (uint8_t i = 0; i < N_CELL; i++)
     {
