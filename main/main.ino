@@ -331,28 +331,21 @@ void onKeyPress(char key)
 
   // 이전 프레스와의 간격으로 연타 판단
   if (now - st.lastPressTime < repeatWindowMs)
-  {
     st.repeatCount++;
-  }
   else
-  {
     st.repeatCount = 1;
-  }
+
   st.lastPressTime = now;
 
   st.startTime = now + ledOffsetMs;
 
-  if (st.repeatCount >= 2)
+  if (st.repeatCount >= 2 && st.effect != EFFECT_BREATHING)
   {
-    if (st.effect != EFFECT_BREATHING)
-      st.huePhase = 0.0f; // 처음 및 재연타 시 hue 단계 초기화
-
     st.effect = EFFECT_BREATHING;
+    st.huePhase = 0.0f; // 처음 및 재연타 시 hue 단계 초기화
+    return;
   }
-  else
-  {
-    st.effect = EFFECT_HIT_FLASH;
-  }
+  st.effect = EFFECT_HIT_FLASH;
 }
 
 // === 키 릴리즈 이벤트 처리 ===
