@@ -46,12 +46,12 @@ python3 main.py \
 
 #### 지원 키
 
-- **A → D 레인**
-- **S → F 레인**
-- **; → K 레인**
-- **' → L 레인**
-- **Enter → Dual Rainbow 트리거**
-- **ESC → 클라이언트 종료**
+- <kbd>A</kbd> → D 레인
+- <kbd>S</kbd> → F 레인
+- <kbd>;</kbd> → K 레인
+- <kbd>'</kbd> → L 레인
+- <kbd>Enter</kbd> → Dual Rainbow 트리거
+- <kbd>ESC</kbd> → 클라이언트 종료
 
 ## 시리얼 프로토콜
 
