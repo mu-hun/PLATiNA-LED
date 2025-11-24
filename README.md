@@ -3,13 +3,12 @@
 https://github.com/user-attachments/assets/e6d7e4c1-7250-472a-98e9-356393bfd2fc
 
 리듬게임 [PLATiNA :: LAB](https://platinalab.net/)의 4키 레인 입력을
-[`NS‑LED‑02`](./NS-LED.pdf)으로 실시간 시각화하는 프로젝트의 개념
-증명(PoC)입니다.
+[`NS‑LED‑02`](./NS-LED.pdf)으로 실시간 시각화하는 프로젝트입니다.
 
 본 코드베이스는 다음 두 부분으로 구성됩니다.
 
-1. `NS‑LED‑02` 제어 (`main.ino`)
-2. 4키 후킹 & 시리얼 송신 클라이언트 (`main.py`)
+1. `NS‑LED‑02` 제어 ([`main.ino`](main/main.ino))
+2. 4키 후킹 & 시리얼 송신 클라이언트 ([`main.py`](main/main.py))
 
 ## 개요
 
@@ -119,7 +118,7 @@ OFFSET 0    → 즉시 반응
 
 ## FPS 동기화
 
-루프의 실행 빈도를 게임 FPS와 맞추기 위해:
+루프의 실행 빈도를 게임 설정의 초당 프레임과 맞추기 위해:
 
 ```
 const int targetFPS = 60;
@@ -128,21 +127,27 @@ unsigned long frameDelayMs = 1000 / targetFPS;
 
 LED 업데이트 주기를 일정하게 유지합니다.
 
-## 전체 데이터 흐름
+## 전체 흐름도
 
+```mermaid
+flowchart TB
+    A["PC 키 입력 감지"] --> B["시리얼 메시지 생성<br><code>DOWN D/F/K/L/E<br>UP D/F/K/L/E</code>"]
+    B --> C@{ label: "Arduino 수신<br/><code>processLine(char *line)</code>" }
+    C --> D{"키 종류 판별"}
+    D -- D/F/K/L 레인 키 --> E@{ label: "<code>onKeyPress(char key)</code> / <code>onKeyRelease(char key)</code>" }
+    D -- Enter --> F@{ label: "<code>triggerDualRainbow()</code>" }
+    E --> G{"상태 업데이트<br><code>HIT</code> / <code>BREATHING</code>"}
+    G --> H["LED 효과 상태 갱신<br/><code>updateEffects()</code>"]
+    F --> I["Dual Rainbow 활성화"]
+    I --> H
+    H --> J["NS_Rainbow LED 출력<br><code>ns_stick.show()</code>"]
+    J --> K["Loop 반복"]
+    K --> B
 ```
-플라티나 랩 키 입력
-        ↓ (pynput 후킹)
-PC 클라이언트(main.py)
-        ↓ (Serial line)
-Arduino(main.ino)
-        ↓
-NS‑LED‑02 (8 LEDs)
-```
+
+유한 상태(Finite-state) 바탕의 안정된 LED 제어 흐름을 갖추었습니다.
 
 ## 요약
-
-현재는 **개념 증명(PoC)** 단계이며 다음 구조가 검증되었습니다.
 
 - 키 입력 → 시리얼 전송 → 레인 효과 정상 반영
 - BPM 기반 LED 시각화 동작
