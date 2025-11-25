@@ -176,3 +176,7 @@ flowchart TB
 - [ ] 실행 중에 BPM 업데이트 가능하게 하기
 - [ ] 다른 리듬게임을 위한 Dual Rainbow 효과 키 매핑 확장하기(예: Shift, Space
       등)
+
+---
+
+[최종 보고서 초안](REPORT.md)
