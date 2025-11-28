@@ -46,13 +46,18 @@ def setup_serial(port: str, baud: int) -> serial.Serial:
     return ser
 
 
-def apply_initial_config(ser, bpm: int | None, offset: int | None):
+def apply_initial_config(ser, bpm: int | None, fps: int | None, offset: int | None):
     """
     시작 시 BPM / OFFSET 값을 아두이노에 전송합니다.
     """
     if bpm is not None:
         print(f"[INFO] Set BPM {bpm}")
         send_line(ser, f"BPM {bpm}")
+        time.sleep(0.05)
+
+    if fps is not None:
+        print(f"[INFO] Set FPS {fps}")
+        send_line(ser, f"FPS {fps}")
         time.sleep(0.05)
 
     if offset is not None:
@@ -83,6 +88,12 @@ def main():
         help="Initial BPM value to send to Arduino (e.g. 180)",
     )
     parser.add_argument(
+        "--fps",
+        type=int,
+        default=None,
+        help="Initial FPS value to send to Arduino (e.g. 60)",
+    )
+    parser.add_argument(
         "--offset",
         type=int,
         default=None,
@@ -92,7 +103,7 @@ def main():
     args = parser.parse_args()
 
     ser = setup_serial(args.port, args.baud)
-    apply_initial_config(ser, args.bpm, args.offset)
+    apply_initial_config(ser, args.bpm, args.fps, args.offset)
 
     print("[INFO] Starting key hook and serial reader.")
 

@@ -33,6 +33,18 @@ unsigned long calculateFrameDelay(int targetFPS)
 
 unsigned long frameDelayMs = calculateFrameDelay(targetFPS);
 
+void setFPS(int newFPS)
+{
+  if (newFPS <= 0)
+    return;
+  frameDelayMs = calculateFrameDelay(newFPS);
+
+  Serial.print(F("[FPS] set to "));
+  Serial.print(newFPS);
+  Serial.print(F(", frameDelayMs="));
+  Serial.println(frameDelayMs);
+}
+
 void setBpm(float newBpm)
 {
   if (newBpm <= 0)
@@ -386,6 +398,14 @@ void processLine(char *line)
     int val = atoi(line + 4);
     if (val > 0)
       setBpm((float)val);
+    return;
+  }
+
+  if (strncmp(line, "FPS ", 4) == 0)
+  {
+    int val = atoi(line + 4);
+    if (val > 0)
+      setFPS(val);
     return;
   }
 
