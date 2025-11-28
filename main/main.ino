@@ -24,7 +24,7 @@ float breathingPeriodBaseMs = beatMs * 2.0f;
 int ledOffsetMs = 0;
 
 // === FPS 설정 ===
-const int targetFPS = 60; // 인게임 FPS에 맞춰 조정
+const int targetFPS = 120; // 인게임 FPS에 맞춰 조정
 
 unsigned long calculateFrameDelay(int targetFPS)
 {
