@@ -1,0 +1,4 @@
+{
+  "arduino.commandPath": "/opt/homebrew/bin/arduino-cli",
+  "arduino.useArduinoCli": true
+}

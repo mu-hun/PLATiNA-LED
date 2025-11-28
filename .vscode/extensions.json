@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "vscode-arduino.vscode-arduino-community",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "ms-python.pylint"
+  ]
+}
