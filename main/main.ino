@@ -11,8 +11,11 @@ const uint8_t laneStart[4] = {0, 2, 4, 6};
 const uint8_t ledsPerLane = 2;
 
 // === BPM / OFFSET 상태 ===
+const float SECOND_MS = 1000.0f;
+const float MINUTE_MS = SECOND_MS * 60.0f;
+
 float bpm = 180.0f;
-float beatMs = 60000.0f / bpm;
+float beatMs = MINUTE_MS / bpm;
 
 unsigned long flashDurationMs = beatMs / 3.0f;
 unsigned long dualRainbowDurationMs = beatMs * 2.0f;
@@ -25,7 +28,7 @@ const int targetFPS = 60; // 인게임 FPS에 맞춰 조정
 
 unsigned long calculateFrameDelay(int targetFPS)
 {
-  return 1000 / targetFPS;
+  return SECOND_MS / targetFPS;
 }
 
 unsigned long frameDelayMs = calculateFrameDelay(targetFPS);
@@ -35,7 +38,7 @@ void setBpm(float newBpm)
   if (newBpm <= 0)
     return;
   bpm = newBpm;
-  beatMs = 60000.0f / bpm;
+  beatMs = MINUTE_MS / bpm;
 
   flashDurationMs = beatMs / 3.0f;
   dualRainbowDurationMs = beatMs * 2.0f;
