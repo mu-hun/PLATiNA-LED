@@ -3,6 +3,7 @@ import time
 import argparse
 import serial
 from pynput import keyboard
+import threading
 
 # 아두이노 시리얼 포트 설정
 DEFAULT_PORT = "/dev/cu.usbserial-2120"
@@ -66,6 +67,57 @@ def apply_initial_config(ser, bpm: int | None, fps: int | None, offset: int | No
         time.sleep(0.05)
 
 
+def handle_runtime_config(ser, line: str):
+    """런타임 중에 BPM / FPS / OFFSET 값을 변경하는 한 줄 명령을 처리합니다.
+
+    예) "bpm 180", "fps 120", "offset 30"
+    """
+    line = line.strip()
+    if not line:
+        return
+
+    parts = line.split()
+    if len(parts) != 2:
+        print(
+            "[WARN] Invalid config format. Use 'bpm <값>', 'fps <값>', 'offset <값>'."
+        )
+        return
+
+    [config_type, value] = parts
+
+    if config_type == "bpm":
+        print(f"[INFO] Set BPM {value}")
+        send_line(ser, f"BPM {value}")
+        return
+
+    if config_type == "fps":
+        print(f"[INFO] Set FPS {value}")
+        send_line(ser, f"FPS {value}")
+        return
+
+    if config_type == "offset":
+        print(f"[INFO] Set OFFSET {value} ms")
+        send_line(ser, f"OFFSET {value}")
+        return
+
+    print(f"[WARN] Unknown config type: {config_type}")
+
+
+def runtime_config_thread(ser):
+    """별도 스레드에서 표준 입력을 읽어 런타임 설정 변경을 처리합니다."""
+    print(
+        "[CONFIG] 런타임 설정 변경 입력 대기 중: 'bpm <값>', 'fps <값>', 'offset <값>' 이후 Enter 키 입력"
+    )
+    try:
+        for line in sys.stdin:
+            try:
+                handle_runtime_config(ser, line)
+            except Exception as e:  # 방어적 로깅
+                print(f"[ERROR] Failed to apply runtime config: {e}", file=sys.stderr)
+    except KeyboardInterrupt:
+        return
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="PLATiNA-LED PC client (key hook → Arduino serial)"
@@ -106,6 +158,11 @@ def main():
     apply_initial_config(ser, args.bpm, args.fps, args.offset)
 
     print("[INFO] Starting key hook and serial reader.")
+
+    config_thread = threading.Thread(
+        target=runtime_config_thread, args=(ser,), daemon=True
+    )
+    config_thread.start()
 
     def on_press(key: keyboard.KeyCode | keyboard.Key | None):
         if isinstance(key, keyboard.KeyCode) and key.char:
