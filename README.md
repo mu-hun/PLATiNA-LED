@@ -144,25 +144,71 @@ unsigned long frameDelayMs = 1000 / targetFPS;
 
 LED 업데이트 주기를 일정하게 유지합니다.
 
-## 전체 흐름도
+## 시퀸스 다이어그램
+
+### 초기 설정, 레인 키 입력, Enter 입력
 
 ```mermaid
-flowchart TB
-    A["PC 키 입력 감지"] --> B["시리얼 메시지 생성<br><code>DOWN D/F/K/L/E<br>UP D/F/K/L/E</code>"]
-    B --> C@{ label: "Arduino 수신<br/><code>processLine(char *line)</code>" }
-    C --> D{"키 종류 판별"}
-    D -- D/F/K/L 레인 키 --> E@{ label: "<code>onKeyPress(char key)</code> / <code>onKeyRelease(char key)</code>" }
-    D -- Enter --> F@{ label: "<code>triggerDualRainbow()</code>" }
-    E --> G{"상태 업데이트<br><code>HIT_FLASH</code> / <code>BREATHING</code>"}
-    G --> H["LED 효과 상태 갱신<br/><code>updateEffects()</code>"]
-    F --> I["Dual Rainbow 활성화"]
-    I --> H
-    H --> J["NS_Rainbow LED 출력<br><code>ns_stick.show()</code>"]
-    J --> K["Loop 반복"]
-    K --> B
+sequenceDiagram
+    autonumber
+    actor Player as 사용자
+    participant PC as PC Client
+    participant UNO as Arduino UNO
+    participant LED as NS-Rainbow LED
+
+    Note over Player,LED: 초기 설정(BPM/FPS/OFFSET)
+    Player->>PC: 클라이언트 실행
+    PC->>UNO: BPM / FPS / OFFSET
+    UNO->>UNO: 파라미터 설정
+
+    Note over Player,LED: 레인 키 입력(D/F/K/L)
+    Player->>PC: 키 입력
+    PC->>UNO: DOWN / UP (D/F/K/L)
+    UNO->>UNO: FSM 상태 갱신
+    UNO->>LED: LED 효과 출력
+
+    Note over Player,LED: Enter 입력
+    Player->>PC: Enter
+    PC->>UNO: DOWN / UP (E)
+    UNO->>LED: Dual Rainbow 출력
 ```
 
-유한 상태(Finite-state) 바탕의 안정된 LED 제어 흐름을 갖추었습니다.
+### 레인 키 입력 상태 관리
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Player as 사용자
+    participant PC as PC Client
+    participant UNO as Arduino UNO(FSM)
+    participant LED as NS-Rainbow LED
+
+    Player->>PC: 키 입력(D/F/K/L)
+    PC->>UNO: DOWN <lane>
+
+    alt 단타 입력
+        UNO->>UNO: FSM → HIT_FLASH
+        UNO->>LED: 짧은 플래시 출력
+    else 연타 입력
+        UNO->>UNO: FSM → BREATHING
+        UNO->>LED: Hue 회전 기반 호흡 효과
+    else 키 홀드
+        opt 일정 시간 이상 유지
+            UNO->>UNO: FSM → HOLD
+            UNO->>LED: 지속 발광 효과
+        end
+    end
+
+    PC->>UNO: UP <lane>
+    UNO->>UNO: FSM → NONE
+    UNO->>LED: 레인 LED OFF
+```
+
+- `HIT_FLASH`: 단타
+- `BREATHING`: 연타 및 키 홀드
+- `NONE`: 키 놓음
+
+유한 상태 기계(Finite-state Machine) 바탕의 LED 제어 흐름을 설계했습니다.
 
 ## 요약
 
