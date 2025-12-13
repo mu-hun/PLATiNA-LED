@@ -105,8 +105,8 @@ beatMs = 60000 / BPM
 Breathing 효과에서 Hue는 회전하며 Rainbow 효과를 만든다.
 
 ```
-huePhase = (huePhase + speed) mod 360
 speed = 0.8 + (repeatCount - 1) * 0.6
+huePhase = (huePhase + speed) mod 360
 ```
 
 - repeatCount 증가 → Hue 회전이 빨라짐
@@ -151,7 +151,7 @@ brightness = 1 - (elapsed / flashDurationMs)
 
 루프의 실행 빈도를 게임 설정의 초당 프레임과 맞추기 위해:
 
-```
+```cpp
 const int targetFPS = 60;
 unsigned long frameDelayMs = 1000 / targetFPS;
 ```
