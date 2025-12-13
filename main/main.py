@@ -20,7 +20,7 @@ KEY_MAP = {
 KEY_LOGGING = False
 
 
-def send_line(ser, line: str):
+def send_line(ser: serial.Serial, line: str):
     """
     아두이노로 한 줄 전송 (끝에 \n 자동 추가)
     """
