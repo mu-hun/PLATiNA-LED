@@ -6,7 +6,7 @@ from pynput import keyboard
 import threading
 
 # 아두이노 시리얼 포트 설정
-DEFAULT_PORT = "/dev/cu.usbserial-2120"
+DEFAULT_PORT = "/dev/cu.usbserial-120"
 DEFAULT_BAUD = 115200
 
 # 키 매핑: PC 키 → 아두이노로 보낼 문자
