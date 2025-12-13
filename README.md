@@ -153,7 +153,7 @@ flowchart TB
     C --> D{"키 종류 판별"}
     D -- D/F/K/L 레인 키 --> E@{ label: "<code>onKeyPress(char key)</code> / <code>onKeyRelease(char key)</code>" }
     D -- Enter --> F@{ label: "<code>triggerDualRainbow()</code>" }
-    E --> G{"상태 업데이트<br><code>HIT</code> / <code>BREATHING</code>"}
+    E --> G{"상태 업데이트<br><code>HIT_FLASH</code> / <code>BREATHING</code>"}
     G --> H["LED 효과 상태 갱신<br/><code>updateEffects()</code>"]
     F --> I["Dual Rainbow 활성화"]
     I --> H
