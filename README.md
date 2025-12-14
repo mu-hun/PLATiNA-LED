@@ -1,6 +1,6 @@
 # PLATiNA‑LED
 
-https://github.com/user-attachments/assets/d5320a50-baea-4660-8e7b-4228908b1e18
+https://github.com/user-attachments/assets/6a082e7d-eb8c-4860-afe9-0c61cdc0a4ae
 
 리듬게임 [PLATiNA :: LAB](https://platinalab.net/)의 4키 레인 입력을
 [`NS‑LED‑02`](./NS-LED.pdf)으로 실시간 시각화하는 프로젝트입니다.
