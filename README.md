@@ -1,5 +1,7 @@
 # PLATiNA‑LED
 
+> Translation: [English](README.en.md)
+
 https://github.com/user-attachments/assets/6a082e7d-eb8c-4860-afe9-0c61cdc0a4ae
 
 리듬게임 [PLATiNA :: LAB](https://platinalab.net/)의 4키 레인 입력을
